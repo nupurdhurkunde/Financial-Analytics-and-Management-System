@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💰 Financial Analytics & Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div id="page-login" class="page active">
+
+  <div class="login-hero">
+    <div class="login-hero-badge">✦ Financial Analytics & Management System </div>
+    <h1>Manage Money<br><em>Smartly</em></h1>
+    <p>Track income, control expenses, set budgets, and get AI-powered investment advice — all in one place</p>
+  </div>
+
+  <div class="login-form-side">
+    <div class="login-card">
+      <div style="padding:24px 24px 0">
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Login</button>
+          <button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">Sign up</button>
+        </div>
+      </div>
+
+      <div class="form-body">
+
+        <!-- LOGIN PANEL -->
+        <div id="formLogin" class="form-panel active">
+          <p class="form-subtitle">Welcome back! Enter your credentials.</p>
+          <div class="field">
+            <input type="text" id="loginUser" placeholder="Username" autocomplete="off">
+          </div>
+          <div class="field">
+            <input type="password" id="loginPass" placeholder="Password" autocomplete="new-password">
+          </div>
+          <button class="btn-primary" onclick="doLogin()">Login →</button>
+          <p class="form-msg" id="loginMsg"></p>
+        </div>
+
+        <!-- SIGNUP PANEL -->
+        <div id="formSignup" class="form-panel">
+          <p class="form-subtitle">Create your free account today.</p>
+          <div class="field">
+            <input type="text" id="signupUser" placeholder="Choose a username" autocomplete="off">
+          </div>
+          <div class="field">
+            <input type="password" id="signupPass" placeholder="Create a password" autocomplete="new-password">
+          </div>
+          <button class="btn-primary" onclick="doSignup()">Create Account →</button>
+          <p class="form-msg" id="signupMsg"></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="page-main" class="page">
+
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">💰</div>
+      <span class="brand-name">Finance Analytics & Management System</span>
+    </div>
+    <div class="topbar-user">
+      <div class="user-pill">
+        <div class="user-avatar" id="userAvatarMain"></div>
+        <span id="userNameMain"></span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="dashboard-body">
+
+    <div class="dash-greeting" style="animation:fadeUp .4s ease both">
+      <h2>Good <span id="timeGreeting"></span>, <span id="greetingName"></span> 👋</h2>
+      <p id="dashMonth"></p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats" style="animation:fadeUp .4s .1s ease both">
+      <div class="stat-card income-card">
+        <div class="stat-card-label">💚 This Month's Income</div>
+        <div class="stat-card-value" id="dashIncome">₹0</div>
+        <div class="stat-card-sub">Total recorded income</div>
+      </div>
+      <div class="stat-card expense-card">
+        <div class="stat-card-label">❤️ This Month's Expense</div>
+        <div class="stat-card-value" id="dashExpense">₹0</div>
+        <div class="stat-card-sub">Total recorded expenses</div>
+      </div>
+      <div class="stat-card savings-card">
+        <div class="stat-card-label">💙 Savings</div>
+        <div class="stat-card-value" id="dashSavings">₹0</div>
+        <div class="stat-card-sub">Income minus expenses</div>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div style="animation:fadeUp .4s .2s ease both">
+      <p class="section-label">Quick Actions</p>
+      <div class="menu-grid">
+
+        <div class="menu-card" onclick="showPage('page-expense')">
+          <div class="menu-icon icon-expense">💸</div>
+          <h3>Add Expense</h3>
+          <p>Log a new expense entry for this month</p>
+        </div>
+
+        <div class="menu-card" onclick="showPage('page-income')">
+          <div class="menu-icon icon-income">💵</div>
+          <h3>Add Income</h3>
+          <p>Record salary, freelance or other income</p>
+        </div>
+
+        <div class="menu-card" onclick="showPage('page-budget')">
+          <div class="menu-icon icon-budget">🎯</div>
+          <h3>Set Threshold</h3>
+          <p>Define your monthly spending limit</p>
+        </div>
+
+        <div class="menu-card" onclick="showPage('page-report')">
+          <div class="menu-icon icon-report">📊</div>
+          <h3>View Report</h3>
+          <p>See charts and financial summary</p>
+        </div>
+
+        <div class="menu-card" onclick="showPage('page-advisor')">
+          <div class="menu-icon icon-advisor">🤖</div>
+          <h3>Smart Advisor</h3>
+          <p>Get personalised investment guidance</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="page-income" class="page form-page">
+
+  <div class="form-hero income-hero">
+    <div class="form-hero-emoji">💵</div>
+    <h2>Record Your Income</h2>
+    <p>Log every income source — salary, freelance, business, or investments — to keep your finances accurate.</p>
+    <div class="month-badge"><span id="incomeMonthHero"></span></div>
+  </div>
+
+  <div class="form-right">
+    <div class="form-box">
+      <button class="back-link" onclick="showPage('page-main')">Back to Dashboard</button>
+      <h3>Add Income</h3>
+      <p class="form-desc">Fill in the details below to record an income entry.</p>
+
+      <div class="input-group">
+        <label>Date</label>
+        <input type="date" id="incomeDate">
+      </div>
+      <div class="input-group">
+        <label>Income Type</label>
+        <select id="incomeMode">
+          <option value="">Select type…</option>
+          <option>Salary</option>
+          <option>Business</option>
+          <option>Freelance</option>
+          <option>Investment</option>
+          <option>Gift</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Amount (In INR)</label>
+        <input type="number" id="incomeAmount" placeholder="e.g. 50000">
+      </div>
+      <button class="btn-primary" onclick="saveIncome()">Save Income</button>
+      <p class="form-msg" id="incomeMsg"></p>
+    </div>
+  </div>
+
+</div>
+
+<div id="page-expense" class="page form-page">
+
+  <div class="form-hero expense-hero">
+    <div class="form-hero-emoji">💸</div>
+    <h2>Track Your Expenses</h2>
+    <p>Record every rupee you spend — food, rent, travel, shopping — to understand where your money goes.</p>
+    <div class="month-badge"><span id="expenseMonthHero"></span></div>
+  </div>
+
+  <div class="form-right">
+    <div class="form-box">
+      <button class="back-link" onclick="showPage('page-main')">Back to Dashboard</button>
+      <h3>Add Expense</h3>
+      <p class="form-desc">Fill in the details below to record an expense entry.</p>
+
+      <div class="input-group">
+        <label>Date</label>
+        <input type="date" id="expenseDate">
+      </div>
+      <div class="input-group">
+        <label>Expense Category</label>
+        <select id="expenseMode">
+          <option value="">Select category…</option>
+          <option>Food</option>
+          <option>Rent</option>
+          <option>Travel</option>
+          <option>Shopping</option>
+          <option>Bills</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Amount (In INR)</label>
+        <input type="number" id="expenseAmount" placeholder="e.g. 2000">
+      </div>
+      <button class="btn-primary" onclick="saveExpense()">Save Expense</button>
+      <p class="form-msg" id="expenseMsg"></p>
+    </div>
+  </div>
+
+</div>
+
+<div id="page-budget" class="page form-page">
+
+  <div class="form-hero budget-hero">
+    <div class="form-hero-emoji">🎯</div>
+    <h2>Set Threshold</h2>
+    <p>Define a monthly spending limit to stay on track and build better saving habits every month.</p>
+    <div class="month-badge"><span id="budgetMonthHero"></span></div>
+  </div>
+
+  <div class="form-right">
+    <div class="form-box">
+      <button class="back-link" onclick="showPage('page-main')">Back to Dashboard</button>
+      <h3>Monthly Threshold</h3>
+      <p class="form-desc">Enter the maximum you want to spend this month.</p>
+
+      <div class="input-group">
+        <label>Amount (In INR)</label>
+        <input type="number" id="budgetAmount" placeholder="e.g. 30000">
+      </div>
+      <button class="btn-primary" onclick="saveBudget()">Save</button>
+      <p class="form-msg" id="budgetMsg"></p>
+
+      <div id="budgetStatus" style="display:none">
+        <div id="budgetStatusLabel">Threshold vs Expense</div>
+        <div id="budgetStatusText"></div>
+        <div id="budgetBarTrack">
+          <div id="budgetBar"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div id="page-advisor" class="page form-page">
+
+  <div class="form-hero advisor-hero">
+    <div class="form-hero-emoji">🤖</div>
+    <h2>Smart Investment Advisor</h2>
+    <p>Analyse your income vs expenses and get a personalised investment strategy tailored to your savings rate.</p>
+    <div class="month-badge"><span id="advisorMonthHero"></span></div>
+  </div>
+
+  <div class="form-right">
+    <div class="form-box" style="max-width:440px">
+      <button class="back-link" onclick="showPage('page-main')">Back to Dashboard</button>
+      <h3>Financial Analysis</h3>
+      <p class="form-desc">Click below to analyse your current month's data.</p>
+
+      <button class="btn-primary" onclick="analyzeAdvisor()">🔍 Analyse Now</button>
+
+      <div id="advisorResult" class="advisor-result">
+        <div class="result-row">
+          <span class="label">Total Income</span>
+          <span class="value green" id="ar-income">—</span>
+        </div>
+        <div class="result-row">
+          <span class="label">Total Expense</span>
+          <span class="value red" id="ar-expense">—</span>
+        </div>
+        <div class="result-row">
+          <span class="label">Net Savings</span>
+          <span class="value blue" id="ar-savings">—</span>
+        </div>
+        <div class="result-row">
+          <span class="label">Spend Rate</span>
+          <span class="value" id="ar-rate">—</span>
+        </div>
+        <div class="result-row">
+          <span class="label">Status</span>
+          <span id="ar-status">—</span>
+        </div>
+        <div class="advice-box" id="ar-advice"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div id="page-report" class="page">
+
+  <div class="report-topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">💰</div>
+      <span class="brand-name">Financial Analytics & Management System</span>
+    </div>
+    <button class="back-link" onclick="showPage('page-main')">Dashboard</button>
+  </div>
+
+  <div class="report-body">
+
+    <div class="report-header">
+      <h2>📊 Monthly Financial Report</h2>
+      <p id="reportMonthLabel">Loading…</p>
+    </div>
+
+    <div class="report-summary-grid">
+      <div class="report-stat inc">
+        <div class="rs-label">💚 Income</div>
+        <div class="rs-value" id="rpt-income">₹0</div>
+      </div>
+      <div class="report-stat exp">
+        <div class="rs-label">❤️ Expense</div>
+        <div class="rs-value" id="rpt-expense">₹0</div>
+      </div>
+      <div class="report-stat sav">
+        <div class="rs-label">💙 Savings</div>
+        <div class="rs-value" id="rpt-savings">₹0</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h4>Bar Chart</h4>
+        <canvas id="rptBar"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Pie Chart</h4>
+        <canvas id="rptPie"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>

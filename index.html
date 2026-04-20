@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome — Financial Analytics & Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      background-image: url("income.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.52);
+    }
+
+    .splash {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0 24px;
+      animation: fadeIn 1.2s ease both;
+    }
+
+    h1 {
+      font-size: clamp(32px, 6vw, 56px);
+      font-weight: 700;
+      color: white;
+      line-height: 1.15;
+      margin-bottom: 28px;
+      animation: fadeIn 1s 0.5s ease both;
+    }
+
+    h1 span { color: #ffd166; }
+
+    .enter-btn {
+      display: inline-block;
+      background: #ffd166;
+      color: #1a1a2e;
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 38px;
+      border-radius: 100px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      animation: fadeIn 1s 0.8s ease both;
+      box-shadow: 0 4px 24px rgba(255, 209, 102, 0.25);
+    }
+
+    .enter-btn:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.2);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="splash">
+    <h1>Welcome to<br><span>Financial Analytics & Management System</span></h1>
+    <a href="dashboard.html" class="enter-btn">Get Started →</a>
+  </div>
+</body>
+</html>
