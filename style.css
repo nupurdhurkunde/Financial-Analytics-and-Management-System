@@ -704,6 +704,99 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 }
 
 /* ══════════════════════════════════════════
+   DETAILED BREAKDOWN (Report page)
+══════════════════════════════════════════ */
+.breakdown-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.breakdown-card {
+  background: var(--card);
+  border-radius: var(--radius); padding: 24px;
+  box-shadow: var(--shadow); border: 1px solid var(--line);
+}
+.breakdown-title {
+  font-size: 14px; font-weight: 600; margin-bottom: 16px;
+}
+.breakdown-title.inc { color: var(--green); }
+.breakdown-title.exp { color: var(--red); }
+
+.breakdown-list { display: flex; flex-direction: column; gap: 10px; }
+.breakdown-empty { color: var(--ghost); font-size: 13px; }
+
+.breakdown-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+}
+.breakdown-row-main {
+  display: flex; align-items: center; gap: 10px;
+  flex: 1; min-width: 0;
+}
+.breakdown-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.breakdown-name {
+  font-size: 13px; color: var(--ink2); font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.breakdown-bar-track {
+  flex: 1; height: 6px; background: var(--line);
+  border-radius: 100px; overflow: hidden; min-width: 40px;
+}
+.breakdown-bar {
+  height: 100%; border-radius: 100px;
+}
+.breakdown-amount {
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  flex-shrink: 0; min-width: 80px; text-align: right;
+}
+.breakdown-pct {
+  font-size: 11px; color: var(--ghost); flex-shrink: 0;
+  min-width: 36px; text-align: right;
+}
+
+/* ══════════════════════════════════════════
+   TRANSACTION TABLE (Report page)
+══════════════════════════════════════════ */
+.txn-table-wrap { overflow-x: auto; margin-top: 4px; }
+.txn-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.txn-table th {
+  text-align: left; padding: 10px 12px;
+  color: var(--ghost); font-weight: 600;
+  font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+  border-bottom: 1.5px solid var(--line);
+}
+.txn-table td {
+  padding: 11px 12px; color: var(--ink2);
+  border-bottom: 1px solid var(--line);
+}
+.txn-table tbody tr:last-child td { border-bottom: none; }
+.txn-table tbody tr:hover { background: var(--card2); }
+.txn-pill {
+  display: inline-block; padding: 3px 10px;
+  border-radius: 100px; font-size: 11px; font-weight: 600;
+}
+.txn-pill.income  { background: rgba(16,185,129,.15); color: #34d399; }
+.txn-pill.expense { background: rgba(239,68,68,.15);  color: #f87171; }
+.txn-amount.income  { color: var(--green); font-weight: 600; }
+.txn-amount.expense { color: var(--red);   font-weight: 600; }
+
+/* ══════════════════════════════════════════
+   ADVISOR LOADING / CREDIT
+══════════════════════════════════════════ */
+.btn-primary[disabled] {
+  opacity: .6; cursor: not-allowed; transform: none !important;
+}
+.advisor-credit {
+  text-align: center; font-size: 11px; color: var(--ghost);
+  margin-top: 18px; letter-spacing: .02em;
+}
+
+@media (max-width: 768px) {
+  .breakdown-grid { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════ */
 @media (max-width: 768px) {
