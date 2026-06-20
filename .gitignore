@@ -1,0 +1,7 @@
+# Never commit your real API key
+config.js
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
