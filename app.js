@@ -106,6 +106,30 @@ function calcExpense() {
 
 function fmt(n) { return '₹' + n.toLocaleString('en-IN'); }
 
+/* Returns a flat array of entries: [{mode, amount, date}] for the given type ('income'|'expenses') */
+function getEntries(type) {
+  const data    = JSON.parse(localStorage.getItem(type)) || {};
+  const entries = data[currentUser()]?.[MONTH_KEY];
+  if (!entries) return [];
+  return Array.isArray(entries) ? entries : [entries];
+}
+
+/* Groups entries by their `mode` (type/category) and returns sorted totals */
+function groupByCategory(entries) {
+  const groups = {};
+  entries.forEach(e => {
+    const key = e.mode || 'Other';
+    groups[key] = (groups[key] || 0) + e.amount;
+  });
+  return Object.entries(groups)
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount);
+}
+
+const CATEGORY_COLORS = ['#10b981','#3b82f6','#f59e0b','#7c3aed','#ef4444','#ec4899','#06b6d4','#84cc16'];
+
+function categoryColor(index) { return CATEGORY_COLORS[index % CATEGORY_COLORS.length]; }
+
 function refreshDashboard() {
   const u = currentUser();
   document.getElementById('userNameMain').textContent    = u;
@@ -229,12 +253,17 @@ function checkBudgetStatus() {
   bar.style.background = pct > 90 ? 'var(--red)' : pct > 70 ? 'var(--gold)' : 'var(--green)';
 }
 
-function analyzeAdvisor() {
-  const income   = calcIncome();
-  const expense  = calcExpense();
-  const savings  = Math.max(0, income - expense);
+async function analyzeAdvisor() {
+  const income    = calcIncome();
+  const expense   = calcExpense();
+  const savings   = Math.max(0, income - expense);
   const overspent = expense > income ? expense - income : 0;
-  const resultEl = document.getElementById('advisorResult');
+  const resultEl  = document.getElementById('advisorResult');
+  const btn       = document.getElementById('advisorBtn');
+  const msg       = document.getElementById('advisorMsg');
+
+  msg.textContent = '';
+  msg.className = 'form-msg';
 
   if (income === 0) {
     resultEl.classList.add('visible');
@@ -243,49 +272,149 @@ function analyzeAdvisor() {
     return;
   }
 
-  const pct = (expense / income) * 100;
-  let statusHtml, adviceTitle, adviceText, pillClass;
-
-  if (pct > 90) {
-    pillClass   = 'over';
-    statusHtml  = `<span class="status-pill ${pillClass}">⚠️ Overspending</span>`;
-    adviceTitle = '🚨 Emergency Plan';
-    adviceText  = 'You are spending more than you earn. Stop all non-essential purchases immediately.';
-  } else if (pct > 70) {
-    pillClass   = 'high';
-    statusHtml  = `<span class="status-pill ${pillClass}">⚠️ High Expenses</span>`;
-    adviceTitle = '💡 Investment Plan';
-    adviceText  = 'Your expenses are high. Start with small SIP investments of ₹500–2000/month in index funds or Fixed Deposits.';
-  } else if (pct > 50) {
-    pillClass   = 'balanced';
-    statusHtml  = `<span class="status-pill ${pillClass}">⚖️ Balanced</span>`;
-    adviceTitle = '📈 Growth Plan';
-    adviceText  = 'Good balance!<br>Invest 30% of savings in Mutual Funds (equity)<br>20% in debt funds<br>Keep 10% as emergency fund.';
-  } else {
-    pillClass   = 'excellent';
-    statusHtml  = `<span class="status-pill ${pillClass}">✅ Excellent</span>`;
-    adviceTitle = '🚀 Wealth Building Plan';
-    adviceText  = 'Outstanding!<br>40% in Index Funds<br>20% in Direct Stocks<br>20% in Gold<br>10% in Crypto (only if risk-tolerant)<br>10% in FD for liquidity.';
+  if (typeof window.GEMINI_API_KEY !== 'string' || !window.GEMINI_API_KEY) {
+    resultEl.classList.remove('visible');
+    msg.textContent = '⚠️ Gemini API key not configured. Add it to config.js (see config.example.js).';
+    msg.className = 'form-msg msg-err';
+    return;
   }
 
-  document.getElementById('ar-income').textContent  = fmt(income);
-  document.getElementById('ar-expense').textContent = fmt(expense);
-  document.getElementById('ar-savings').textContent = fmt(savings);
-  document.getElementById('ar-rate').textContent    = `${Math.round(pct)}%`;
-  document.getElementById('ar-status').innerHTML    = statusHtml;
-  document.getElementById('ar-advice').innerHTML    =
-    `<h4>${adviceTitle}</h4><p>${adviceText}${
-      overspent > 0
-        ? `<br><br><strong style="color:var(--red)">⚠️ Overspent by ${fmt(overspent)}</strong>`
-        : ''
-    }</p>`;
+  const pct = (expense / income) * 100;
 
-  resultEl.classList.add('visible');
+  btn.disabled = true;
+  btn.textContent = '🤖 Analysing…';
+
+  const incomeBreakdown  = groupByCategory(getEntries('income'));
+  const expenseBreakdown = groupByCategory(getEntries('expenses'));
+
+  const prompt = `You are a friendly Indian personal finance advisor inside a budgeting app. Analyse this user's month and respond with ONLY a JSON object (no markdown fences, no preamble) in this exact shape:
+{
+  "statusLabel": "short 2-4 word status e.g. 'Overspending' or 'Excellent'",
+  "statusTier": "one of: excellent | balanced | high | over",
+  "adviceTitle": "short title with one emoji, e.g. '🚀 Wealth Building Plan'",
+  "adviceHtml": "2-4 sentences of specific, actionable investment/savings advice for this exact data, formatted with <br> for line breaks, amounts in ₹ INR"
+}
+
+User's financial data for ${MONTH_DISPLAY}:
+- Total Income: ₹${income.toLocaleString('en-IN')}
+- Total Expense: ₹${expense.toLocaleString('en-IN')}
+- Net Savings: ₹${savings.toLocaleString('en-IN')}
+- Spend Rate: ${Math.round(pct)}%
+- Income by source: ${JSON.stringify(incomeBreakdown)}
+- Expense by category: ${JSON.stringify(expenseBreakdown)}
+${overspent > 0 ? `- Overspent by: ₹${overspent.toLocaleString('en-IN')}` : ''}
+
+Tailor the advice to the actual categories above (e.g. call out if one expense category dominates). Keep it concise and practical for an Indian retail investor (mention SIPs, mutual funds, FDs, index funds where relevant).`;
+
+  // Model name set in config.js as GEMINI_MODEL (defaults below).
+  // Google updates free-tier model names/quotas over time — if this
+  // stops working, test other model names and update GEMINI_MODEL
+  // in your config.js to whichever one returns real results for you.
+  const model = window.GEMINI_MODEL || 'gemini-2.5-flash';
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': window.GEMINI_API_KEY
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`API error ${response.status}: ${errBody}`);
+    }
+
+    const data = await response.json();
+    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawText) throw new Error('No text content in API response.');
+
+    const cleaned = rawText.replace(/```json|```/g, '').trim();
+    const result  = JSON.parse(cleaned);
+
+    document.getElementById('ar-income').textContent  = fmt(income);
+    document.getElementById('ar-expense').textContent = fmt(expense);
+    document.getElementById('ar-savings').textContent = fmt(savings);
+    document.getElementById('ar-rate').textContent    = `${Math.round(pct)}%`;
+    document.getElementById('ar-status').innerHTML    =
+      `<span class="status-pill ${result.statusTier}">${result.statusLabel}</span>`;
+    document.getElementById('ar-advice').innerHTML    =
+      `<h4>${result.adviceTitle}</h4><p>${result.adviceHtml}${
+        overspent > 0
+          ? `<br><br><strong style="color:var(--red)">⚠️ Overspent by ${fmt(overspent)}</strong>`
+          : ''
+      }</p>`;
+
+    resultEl.classList.add('visible');
+  } catch (err) {
+    console.error('Gemini Advisor error:', err);
+    msg.textContent = '⚠️ Could not reach Gemini. Check your API key, model name, and connection.';
+    msg.className = 'form-msg msg-err';
+    resultEl.classList.remove('visible');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 Analyse Now';
+  }
 }
 
 let barChart, pieChart;
 
+function renderBreakdown(containerId, entries, total) {
+  const container = document.getElementById(containerId);
+  if (!entries.length) {
+    container.innerHTML = '<p class="breakdown-empty">No entries recorded this month.</p>';
+    return;
+  }
+  const grouped = groupByCategory(entries);
+  container.innerHTML = grouped.map((g, i) => {
+    const pct = total > 0 ? Math.round((g.amount / total) * 100) : 0;
+    const color = categoryColor(i);
+    return `
+      <div class="breakdown-row">
+        <div class="breakdown-row-main">
+          <span class="breakdown-dot" style="background:${color}"></span>
+          <span class="breakdown-name">${g.name}</span>
+          <div class="breakdown-bar-track">
+            <div class="breakdown-bar" style="width:${pct}%;background:${color}"></div>
+          </div>
+        </div>
+        <span class="breakdown-pct">${pct}%</span>
+        <span class="breakdown-amount">${fmt(g.amount)}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderTransactionTable(incomeEntries, expenseEntries) {
+  const tbody = document.getElementById('txnTableBody');
+  const rows = [
+    ...incomeEntries.map(e => ({ ...e, type: 'income' })),
+    ...expenseEntries.map(e => ({ ...e, type: 'expense' }))
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="breakdown-empty">No transactions yet.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.date || '—'}</td>
+      <td><span class="txn-pill ${r.type}">${r.type === 'income' ? 'Income' : 'Expense'}</span></td>
+      <td>${r.mode || 'Other'}</td>
+      <td class="txn-amount ${r.type}">${r.type === 'income' ? '+' : '−'}${fmt(r.amount)}</td>
+    </tr>`).join('');
+}
+
 function renderReport() {
+  const incomeEntries  = getEntries('income');
+  const expenseEntries = getEntries('expenses');
   const income  = calcIncome();
   const expense = calcExpense();
   const savings = Math.max(0, income - expense);
@@ -294,6 +423,10 @@ function renderReport() {
   document.getElementById('rpt-income').textContent  = fmt(income);
   document.getElementById('rpt-expense').textContent = fmt(expense);
   document.getElementById('rpt-savings').textContent = fmt(savings);
+
+  renderBreakdown('rptIncomeBreakdown', incomeEntries, income);
+  renderBreakdown('rptExpenseBreakdown', expenseEntries, expense);
+  renderTransactionTable(incomeEntries, expenseEntries);
 
   /* Destroy old charts before re-render */
   if (barChart) { barChart.destroy(); barChart = null; }
